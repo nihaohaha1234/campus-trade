@@ -1,0 +1,34 @@
+# Java / Spring Boot
+campus-trade/target/
+campus-trade/*.log
+
+# Local backend config with real password
+campus-trade/src/main/resources/application.properties
+
+# Runtime uploaded files
+campus-trade/images/
+campus-trade/zhaopian/
+
+# Node / Vue
+campus-trade-web/node_modules/
+campus-trade-web/dist/
+campus-trade-web/dist-ssr/
+campus-trade-web/*.log
+
+# IDE
+**/.idea/
+**/.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*

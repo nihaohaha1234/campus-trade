@@ -28,7 +28,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry){
         registry.addResourceHandler("/images/**")
-                .addResourceLocations("file:D:/codex/project/campus-trade/images/");
+                .addResourceLocations("file:/tmp/campus-trade/images/");
     }
     //spring8080和vue5173的跨域配置
     @Override

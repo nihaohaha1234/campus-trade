@@ -19,7 +19,7 @@
       <div class="card" v-for="product in products" :key="product.id" @click="searchProductDetailsForAdmin(product.id)">
         <img
             v-if="product.imageUrl"
-            :src="'http://localhost:8080'+product.imageUrl"
+            :src="API_BASE_URL+product.imageUrl"
         />
         <div class="image-placeholder" v-else>暂无图片</div>
 
@@ -64,6 +64,7 @@ import {useRouter} from "vue-router";
 import {ref,onMounted} from "vue";
 import request from "../api/request.js";
 import ToastMessage from '../components/ToastMessage.vue'
+import { API_BASE_URL } from '../api/config.js'
 
 const router = useRouter()
 const errorMessage = ref('')

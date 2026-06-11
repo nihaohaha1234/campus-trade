@@ -39,7 +39,7 @@
     <div class="order-list" v-if="orders.length !== 0">
       <div class="order-card" v-for="order in orders" :key="order.id" @click="goOrderDetails(order.id)">
           <img v-if="order.imageUrl"
-               :src="'http://localhost:8080'+order.imageUrl"/>
+               :src="API_BASE_URL+order.imageUrl"/>
           <div class="image-placeholder" v-else>暂无图片</div>
 
           <div class="order-info">
@@ -107,6 +107,7 @@ import {ref,onMounted} from "vue";
 import {useRouter,useRoute} from "vue-router";
 import request from "../api/request.js";
 import ToastMessage from '../components/ToastMessage.vue'
+import { API_BASE_URL } from '../api/config.js'
 
 const router = useRouter()
 const route = useRoute()

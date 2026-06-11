@@ -1,5 +1,6 @@
 package com.example.campustrade.dto;
 
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,6 +22,7 @@ public class ProductDTO {
 
     @NotNull(message = "价格不能为空")
     @DecimalMin(value = "0.01",message = "价格必须大于0")
+    @DecimalMax(value = "9999999",message = "价格不能过大")
     private BigDecimal price;
 
     private String imageUrl;

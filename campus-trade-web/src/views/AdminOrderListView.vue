@@ -37,7 +37,7 @@
         <td>
           <div class="table-product">
             <img v-if="order.imageUrl"
-                 :src="'http://localhost:8080'+order.imageUrl"/>
+                 :src="API_BASE_URL+order.imageUrl"/>
             <div class="table-image-placeholder" v-else>无图</div>
             <span>{{order.productTitle}}</span>
           </div>
@@ -83,6 +83,7 @@
 import {ref,onMounted} from "vue";
 import {useRouter} from "vue-router";
 import request from "../api/request.js";
+import { API_BASE_URL } from '../api/config.js'
 
 const orders = ref([])
 const errorMessage = ref('')

@@ -1,7 +1,6 @@
 <template>
   <div class="order-detail-page">
     <button class="back-btn" @click="goBack">返回订单列表</button>
-    <p class="error" v-if="errorMessage">{{errorMessage}}</p>
     <ToastMessage
         :message="messageText"
         :type="messageType"
@@ -12,7 +11,7 @@
       <div class="order-detail-image-box">
         <img
           v-if="order.imageUrl"
-          :src="'http://localhost:8080'+order.imageUrl"
+          :src="API_BASE_URL+order.imageUrl"
           class="order-detail-image"/>
         <div class="order-detail-placeholder" v-else>暂无图片</div>
       </div>
@@ -68,10 +67,10 @@ import {ref,onMounted} from "vue";
 import {useRouter,useRoute} from "vue-router";
 import request from "../api/request.js";
 import ToastMessage from '../components/ToastMessage.vue'
+import { API_BASE_URL } from '../api/config.js'
 
 const route = useRoute()
 const router = useRouter()
-const errorMessage = ref('')
 const order = ref(null)
 const id = route.params.id
 const orderType = route.query.type || 'buyer'
@@ -79,65 +78,61 @@ const messageText = ref('')
 const messageType = ref('')
 
 async function loadOrder(){
-  errorMessage.value = ''
   try {
     const res = await request.get('/orders/'+id)
     if (res.data.code === 200){
       order.value = res.data.data
     }else{
-      errorMessage.value = res.data.message
+      showMessage(res.data.message,'error')
     }
   }catch (e) {
     console.log(e)
-    errorMessage.value = '查询该订单失败'
+    showMessage('查询该订单失败','error')
   }
 }
 
 async function cancelOrder(){
-  errorMessage.value = ''
   try {
     const res = await request.put('/orders/'+id+'/cancel')
     if (res.data.code === 200){
       showMessage('取消订单成功','success')
       await loadOrder()
     }else {
-      errorMessage.value = res.data.message
+      showMessage(res.data.message,'error')
     }
   }catch (e) {
     console.log(e)
-    errorMessage.value = '取消订单失败，请稍后再试'
+    showMessage('取消订单失败，请稍后再试','error')
   }
 }
 
 async function confirmOrder(){
-  errorMessage.value = ''
   try {
     const res = await request.put('/orders/'+id+'/confirm')
     if (res.data.code === 200){
       showMessage('确认订单成功','success')
       await loadOrder()
     }else {
-      errorMessage.value = res.data.message
+      showMessage(res.data.message,'error')
     }
   }catch (e) {
     console.log(e)
-    errorMessage.value = '确认订单失败，请稍后再试'
+    showMessage('确认订单失败，请稍后再试','error')
   }
 }
 
 async function finishOrder(){
-  errorMessage.value = ''
   try {
     const res = await request.put('/orders/'+id+'/finish')
     if (res.data.code === 200){
       showMessage('完成订单成功','success')
       await loadOrder()
     }else {
-      errorMessage.value = res.data.message
+      showMessage(res.data.message,'error')
     }
   }catch (e) {
     console.log(e)
-    errorMessage.value = '完成订单失败，请稍后再试'
+    showMessage('完成订单失败，请稍后再试','error')
   }
 }
 

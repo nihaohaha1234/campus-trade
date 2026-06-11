@@ -6,7 +6,7 @@
       <img
           v-if="product.imageUrl"
           class="detail-image"
-          :src="'http://localhost:8080'+product.imageUrl"/>
+          :src="API_BASE_URL+product.imageUrl"/>
 
       <div class="detail-image-placeholder" v-else>
         暂无图片
@@ -32,6 +32,7 @@
 import {onMounted, ref} from "vue";
 import {useRouter,useRoute} from "vue-router";
 import request from "../api/request.js";
+import { API_BASE_URL } from '../api/config.js'
 
 const route = useRoute()
 const router = useRouter()

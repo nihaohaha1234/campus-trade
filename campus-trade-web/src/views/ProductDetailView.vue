@@ -10,12 +10,10 @@
 
     <div class="detail-card" v-if="product">
 
-      <p class="error" v-if="errorMessage">{{errorMessage}}</p>
-
       <img
         v-if="product.imageUrl"
         class="detail-image"
-        :src="'http://localhost:8080'+product.imageUrl"/>
+        :src="API_BASE_URL+product.imageUrl"/>
 
       <div class="detail-image-placeholder" v-else>
         暂无图片
@@ -51,34 +49,32 @@ import {onMounted,ref} from "vue";
 import  {useRouter,useRoute} from "vue-router";
 import request from "../api/request.js";
 import ToastMessage from '../components/ToastMessage.vue'
+import { API_BASE_URL } from '../api/config.js'
 
 
 const router = useRouter()
 const route = useRoute()
 const id = route.params.id
 const product = ref(null)
-const errorMessage = ref('')
 const favorited = ref(false)
 const messageText = ref('')
 const messageType = ref('')
 
 async function getProductDetail(id){
-  errorMessage.value = ''
   try {
     const res = await request.get("/products/"+id)
     if(res.data.code === 200) {
       product.value = res.data.data
     }else {
-      errorMessage.value = res.data.message
+      showMessage(res.data.message,'error')
     }
   }catch (e) {
     console.log(e)
-    errorMessage.value = '查询商品详情失败'
+    showMessage('查询商品详情失败','error')
   }
 }
 
 async function addOrder(id){
-  errorMessage.value = ''
   try {
     const res = await request.post('/orders/'+id)
     if (res.data.code === 200){
@@ -87,31 +83,29 @@ async function addOrder(id){
         router.push('/orders')
       },2000)
     }else {
-      errorMessage.value = res.data.message
+      showMessage(res.data.message,'error')
     }
   }catch (e) {
     console.log(e)
-    errorMessage.value = '发起交易失败'
+    showMessage('发起交易失败','error')
   }
 }
 
 async function loadFavoriteStatus(){
-  errorMessage.value = ''
   try {
     const res = await request.get('/favorites/'+id+"/isFavorite")
     if (res.data.code === 200){
       favorited.value = res.data.data
     }else {
-      errorMessage.value = res.data.message
+      showMessage(res.data.message,'error')
     }
   }catch (e) {
     console.log(e)
-    errorMessage.value = '查看收藏状态失败，请稍后再试'
+    showMessage('查看收藏状态失败，请稍后再试','error')
   }
 }
 
 async function toggleFavorite(){
-  errorMessage.value = ''
   let res
   try {
     if (favorited.value == false){
@@ -124,11 +118,11 @@ async function toggleFavorite(){
       const text =  favorited.value?'收藏成功':'取消收藏成功'
       showMessage(text,'success')
     }else {
-      errorMessage.value = res.data.message
+      showMessage(res.data.message,'error')
     }
   }catch (e) {
     console.log(e)
-    errorMessage.value = favorited.value?'取消收藏失败':'收藏失败'
+    showMessage(favorited.value?'取消收藏失败':'收藏失败','error')
   }
 }
 

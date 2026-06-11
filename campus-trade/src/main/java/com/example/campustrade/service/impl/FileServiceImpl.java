@@ -19,7 +19,7 @@ public class FileServiceImpl implements FileService {
         String originalFileName = file.getOriginalFilename();
         String suffix = originalFileName.substring(originalFileName.lastIndexOf("."));
         String fileName = UUID.randomUUID().toString().replace("-","") + suffix;
-        File dir = new File("D:/codex/project/campus-trade/images/");
+        File dir = new File("/tmp/campus-trade/images/");
         if(!dir.exists()){
             dir.mkdirs();
         }

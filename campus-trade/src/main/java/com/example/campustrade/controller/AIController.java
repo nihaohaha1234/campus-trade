@@ -2,9 +2,10 @@ package com.example.campustrade.controller;
 
 
 import com.example.campustrade.common.Result;
-import com.example.campustrade.dto.ProductAIOptimizeDTO;
+import com.example.campustrade.dto.ProductAIDTO;
 import com.example.campustrade.service.AIService;
 import com.example.campustrade.vo.ProductAIOptimizeVO;
+import com.example.campustrade.vo.ProductAIReviewVO;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +22,12 @@ public class AIController {
     }
 
     @PostMapping("/products/optimize")
-    public Result<ProductAIOptimizeVO> optimizeProduct(@RequestBody ProductAIOptimizeDTO dto){
+    public Result<ProductAIOptimizeVO> optimizeProduct(@RequestBody ProductAIDTO dto){
         return Result.success(aiService.optimizeProduct(dto));
+    }
+
+    @PostMapping("/products/review")
+    public Result<ProductAIReviewVO> reviewProduct(@RequestBody ProductAIDTO dto){
+        return Result.success(aiService.reviewProduct(dto));
     }
 }

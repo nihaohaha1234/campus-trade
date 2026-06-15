@@ -97,13 +97,19 @@ const pages = ref(1)
 const pageSize = ref(20)
 const total = ref(0)
 
+
 async function loadProducts(){
   let res
   errorMessage.value = ''
   const word = keyWord.value.trim()
   try {
     if (!word){
-      res = await request.get('/products?page='+page.value+'&pageSize='+pageSize.value)
+      const token = localStorage.getItem('token')
+      if (!token){
+        res = await request.get('/products?page='+page.value+'&pageSize='+pageSize.value)
+      }else {
+        res = await request.get('/products/recommend?page='+page.value+'&pageSize='+pageSize.value)
+      }
     }else{
       res = await request.get('/products/search?keyWord='+encodeURIComponent(word)+'&page='+page.value+'&pageSize='+pageSize.value)
     }

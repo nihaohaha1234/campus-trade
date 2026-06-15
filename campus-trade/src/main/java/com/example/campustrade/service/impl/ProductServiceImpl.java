@@ -2,18 +2,18 @@ package com.example.campustrade.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.example.campustrade.common.BusinessException;
-import com.example.campustrade.common.PageParamChecker;
-import com.example.campustrade.common.RedisKeys;
+import com.example.campustrade.common.*;
 import com.example.campustrade.convert.PageConvert;
 import com.example.campustrade.convert.ProductConvert;
+import com.example.campustrade.dto.ProductAIDTO;
 import com.example.campustrade.dto.ProductDTO;
 import com.example.campustrade.entity.ProductDO;
 import com.example.campustrade.enums.ProductStatus;
 import com.example.campustrade.mapper.ProductMapper;
+import com.example.campustrade.service.AIService;
 import com.example.campustrade.service.ProductService;
-import com.example.campustrade.common.AuthContext;
 import com.example.campustrade.vo.PageVO;
+import com.example.campustrade.vo.ProductAIReviewVO;
 import com.example.campustrade.vo.ProductVO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -33,16 +34,38 @@ public class ProductServiceImpl implements ProductService {
 
     private final ObjectMapper objectMapper;
 
-    public ProductServiceImpl(ProductMapper productMapper, StringRedisTemplate stringRedisTemplate, ObjectMapper objectMapper) {
+    private final AIService aiService;
+
+    public ProductServiceImpl(ProductMapper productMapper, StringRedisTemplate stringRedisTemplate, ObjectMapper objectMapper, AIService aiService) {
         this.productMapper = productMapper;
         this.stringRedisTemplate = stringRedisTemplate;
         this.objectMapper = objectMapper;
+        this.aiService = aiService;
     }
 
     @Override
     public void productPublish(ProductDTO productDTO) {
 
         Long userId = AuthContext.getCurrentUserId();
+
+        ProductAIDTO productAIDTO = new ProductAIDTO();
+        productAIDTO.setTitle(productDTO.getTitle());
+        productAIDTO.setDescription(productDTO.getDescription());
+        productAIDTO.setPrice(productDTO.getPrice());
+
+        ProductAIReviewVO productAIReviewVO = aiService.reviewProduct(productAIDTO);
+
+        if (productAIReviewVO == null || productAIReviewVO.getSuggestion() == null) {
+            throw new BusinessException("AI审核失败，请稍后再试");
+        }
+
+        if ("REJECT".equals(productAIReviewVO.getSuggestion())){
+            throw new BusinessException("AI审核未通过:"+productAIReviewVO.getReason());
+        }
+
+        if (!"REJECT".equals(productAIReviewVO.getSuggestion())){
+            throw new BusinessException("AI审核异常，请稍后再试");
+        }
 
         ProductDO productDO = ProductConvert.convertToDO(productDTO,userId);
 
@@ -70,7 +93,118 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public PageVO<ProductVO> getRecommendProducts(Long page, Long pageSize) {
+        PageParamChecker.check(page, pageSize);
+
+        Long userId = AuthContext.getCurrentUserId();
+        String key= RedisKeys.USER_BROWSE_KEY+userId;
+        List<String> browseProducts = stringRedisTemplate.opsForList().range(key,0,-1);
+
+        if (browseProducts == null || browseProducts.isEmpty()){
+            return getAllProducts(page,pageSize);
+        }
+
+        List<Long> browseProductsIds = new ArrayList<>();
+        browseProducts.forEach(browseProduct->{
+            browseProductsIds.add(Long.valueOf(browseProduct));
+        });
+        List<String> keyWords = new ArrayList<>();
+        browseProductsIds.forEach(browseProductId->{
+            ProductDO browseProductDO = productMapper.selectById(browseProductId);
+            if (browseProductDO != null){
+                keyWords.add(browseProductDO.getTitle());
+            }
+        });
+
+        if (keyWords.isEmpty()){
+            return getAllProducts(page,pageSize);
+        }
+
+        //构建wrapper
+        LambdaQueryWrapper<ProductDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ProductDO::getStatus,ProductStatus.ON_SALE.getCode());
+
+        if (!browseProductsIds.isEmpty()){
+            wrapper.notIn(ProductDO::getId,browseProductsIds);
+        }
+
+        wrapper.and(w->{
+            for (int i = 0;i<keyWords.size();i++){
+                if (i > 0)w.or();
+                String keyWord = keyWords.get(i);
+                w.like(ProductDO::getTitle,keyWord)
+                        .or()
+                        .like(ProductDO::getDescription,keyWord);
+            }
+        });
+
+        //查推荐商品
+       List<ProductDO> recommmendProductDOList = productMapper.selectList(wrapper);
+       if (recommmendProductDOList == null || recommmendProductDOList.isEmpty()){
+           return getAllProducts(page,pageSize);
+       }
+       List<ProductVO> recommendProductVOList = new ArrayList<>();
+       recommmendProductDOList.forEach(productDO -> {
+           recommendProductVOList.add(ProductConvert.convertToVO(productDO));
+       });
+
+        //用普通商品补齐商品列表
+        List<Long> excludeIds = new ArrayList<>();
+
+        recommendProductVOList.forEach(productVO -> {
+            excludeIds.add(productVO.getId());
+        });
+
+        LambdaQueryWrapper<ProductDO> normalWrapper = new LambdaQueryWrapper<>();
+        normalWrapper.eq(ProductDO::getStatus,ProductStatus.ON_SALE.getCode());
+        normalWrapper.orderByDesc(ProductDO::getCreateTime);
+
+        if (!excludeIds.isEmpty()){
+            normalWrapper.notIn(ProductDO::getId,excludeIds);
+        }
+
+        List<ProductDO> normalProductDOs = productMapper.selectList(normalWrapper);
+        List<ProductVO> normalProductVOs = new ArrayList<>();
+        normalProductDOs.forEach(normalProductDO->{
+            normalProductVOs.add(ProductConvert.convertToVO(normalProductDO));
+        });
+
+        List<ProductVO> finalProductVOList = new ArrayList<>();
+        finalProductVOList.addAll(recommendProductVOList);
+        finalProductVOList.addAll(normalProductVOs);
+
+        //手动分页
+        int total = finalProductVOList.size();
+        Long pages = (total+pageSize-1)/pageSize;
+        int fromIndex = (page.intValue()-1)*pageSize.intValue();
+        int toIndex = Math.min(fromIndex + pageSize.intValue(),finalProductVOList.size());
+
+        List<ProductVO> productVOList = new ArrayList<>();
+        if (fromIndex < finalProductVOList.size()){
+            productVOList = finalProductVOList.subList(fromIndex,toIndex);
+        }
+
+        PageVO<ProductVO> pageVO = new PageVO<>();
+        pageVO.setTotal(Long.valueOf(total));
+        pageVO.setPages(pages);
+        pageVO.setCurrent(page);
+        pageVO.setSize(pageSize);
+        pageVO.setRecords(productVOList);
+
+        return pageVO;
+    }
+
+    @Override
     public ProductVO getProductById(Long id) {
+
+        Long userId = UserContext.getUserId();
+        if (userId != null){
+            String userBrowseKey = RedisKeys.USER_BROWSE_KEY+userId;
+            stringRedisTemplate.opsForList().remove(userBrowseKey,0,String.valueOf(id));//先查重删除所有这个id的商品然后再加入
+            stringRedisTemplate.opsForList().leftPush(userBrowseKey,String.valueOf(id));
+            stringRedisTemplate.opsForList().trim(userBrowseKey,0,9);
+            stringRedisTemplate.expire(userBrowseKey,Duration.ofDays(7));
+        }
 
         String productKey = RedisKeys.PRODUCT_DETAIL_KEY_PREFIX + id;
         String productJson = stringRedisTemplate.opsForValue().get(productKey);
@@ -85,6 +219,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         ProductDO productDO = productMapper.selectById(id);
+
 
         //先判断是否存在该商品
         if (productDO == null) {

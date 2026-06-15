@@ -75,6 +75,11 @@ async function getProductDetail(id){
 }
 
 async function addOrder(id){
+  const token = localStorage.getItem('token')
+  if (!token){
+    showMessage("请先登录再发起交易",'error')
+    return
+  }
   try {
     const res = await request.post('/orders/'+id)
     if (res.data.code === 200){
@@ -106,6 +111,11 @@ async function loadFavoriteStatus(){
 }
 
 async function toggleFavorite(){
+  const token = localStorage.getItem('token')
+  if (!token){
+    showMessage("请先登录再收藏",'error')
+    return
+  }
   let res
   try {
     if (favorited.value == false){
@@ -139,8 +149,11 @@ function showMessage(text,type){
 }
 
 onMounted(()=>{
+  const token = localStorage.getItem('token')
   getProductDetail(id)
-  loadFavoriteStatus()
+  if (token){
+    loadFavoriteStatus()
+  }
 })
 
 

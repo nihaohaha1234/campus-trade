@@ -32,6 +32,12 @@ public class ProductController {
         return Result.success(productService.getAllProducts(page,pageSize));
     }
 
+    @GetMapping("/recommend")
+    public Result<PageVO<ProductVO>> getRecommendProducts(@RequestParam(defaultValue = "1") Long page,
+                                                          @RequestParam(defaultValue = "20") Long pageSize){
+        return Result.success(productService.getRecommendProducts(page, pageSize));
+    }
+
     @GetMapping("/hot")
     public Result<List<ProductVO>> getHotProducts(){
         return Result.success(productService.getHotProducts());

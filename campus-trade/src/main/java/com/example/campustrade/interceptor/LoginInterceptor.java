@@ -31,7 +31,25 @@ public class LoginInterceptor implements HandlerInterceptor {
         }
         if ("GET".equalsIgnoreCase(request.getMethod())
                 && uri.startsWith("/products")
-                && !uri.startsWith("/products/my")){
+                && !uri.startsWith("/products/my")
+                && !uri.startsWith("/products/recommend")){
+
+            String authorization = request.getHeader("Authorization");
+            if (authorization != null && authorization.startsWith("Bearer ")){
+                String token = authorization.substring(7);
+                try {
+                    Long userId = JwtUtils.getUserIdFromToken(token);
+                    UserContext.setUserId(userId);
+                    UserDO userDO = userMapper.selectById(userId);
+                    if (userDO == null){
+                        UserContext.clear();
+                    } else if (UserStatus.DISABLED.getCode().equals(userDO.getStatus())){
+                        UserContext.clear();
+                    }
+                }catch (Exception e){
+                    UserContext.clear();
+                }
+            }
             return true;
         }
 

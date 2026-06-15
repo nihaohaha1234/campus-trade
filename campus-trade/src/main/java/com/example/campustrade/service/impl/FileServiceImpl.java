@@ -28,7 +28,7 @@ public class FileServiceImpl implements FileService {
         try {
             file.transferTo(dest);
         } catch (IOException e) {
-            throw new BusinessException("文件存储失败");
+            throw new BusinessException("文件存储失败：" + e.getMessage());
         }
 
         return "/images/"+fileName;

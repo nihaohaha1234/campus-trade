@@ -1,10 +1,7 @@
 package com.example.campustrade.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.example.campustrade.vo.OrderVO;
-import com.example.campustrade.vo.PageVO;
-import com.example.campustrade.vo.ProductVO;
-import com.example.campustrade.vo.UserVO;
+import com.example.campustrade.vo.*;
 
 
 public interface AdminService {
@@ -24,6 +21,8 @@ public interface AdminService {
     PageVO<UserVO> getAllUsersForAdmin(Long page,Long pageSize);//查询用户列表
 
     PageVO<OrderVO> getAllOrdersForAdmin(Integer status,Long page,Long pageSize);//根据状态查询订单列表
+
+    PageVO<AIReviewLogVO> getAIReviewLogs(Long page, Long pageSize);//管理员查询所有ai审核日志
 
     void disableUser(Long userId);//封禁用户
 

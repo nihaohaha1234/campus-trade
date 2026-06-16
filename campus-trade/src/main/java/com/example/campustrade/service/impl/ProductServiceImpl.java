@@ -3,12 +3,15 @@ package com.example.campustrade.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.campustrade.common.*;
+import com.example.campustrade.convert.AIReviewLogConvert;
 import com.example.campustrade.convert.PageConvert;
 import com.example.campustrade.convert.ProductConvert;
 import com.example.campustrade.dto.ProductAIDTO;
 import com.example.campustrade.dto.ProductDTO;
+import com.example.campustrade.entity.AIReviewLogDO;
 import com.example.campustrade.entity.ProductDO;
 import com.example.campustrade.enums.ProductStatus;
+import com.example.campustrade.mapper.AIReviewLogMapper;
 import com.example.campustrade.mapper.ProductMapper;
 import com.example.campustrade.service.AIService;
 import com.example.campustrade.service.ProductService;
@@ -22,7 +25,6 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -30,14 +32,17 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductMapper productMapper;
 
+    private final AIReviewLogMapper aiReviewLogMapper;
+
     private final StringRedisTemplate stringRedisTemplate;
 
     private final ObjectMapper objectMapper;
 
     private final AIService aiService;
 
-    public ProductServiceImpl(ProductMapper productMapper, StringRedisTemplate stringRedisTemplate, ObjectMapper objectMapper, AIService aiService) {
+    public ProductServiceImpl(ProductMapper productMapper, AIReviewLogMapper aiReviewLogMapper, StringRedisTemplate stringRedisTemplate, ObjectMapper objectMapper, AIService aiService) {
         this.productMapper = productMapper;
+        this.aiReviewLogMapper = aiReviewLogMapper;
         this.stringRedisTemplate = stringRedisTemplate;
         this.objectMapper = objectMapper;
         this.aiService = aiService;
@@ -59,11 +64,14 @@ public class ProductServiceImpl implements ProductService {
             throw new BusinessException("AI审核失败，请稍后再试");
         }
 
+        AIReviewLogDO aiReviewLogDO = AIReviewLogConvert.convertToDO(productAIDTO,userId,productAIReviewVO);
+        aiReviewLogMapper.insert(aiReviewLogDO);
+
         if ("REJECT".equals(productAIReviewVO.getSuggestion())){
             throw new BusinessException("AI审核未通过:"+productAIReviewVO.getReason());
         }
 
-        if (!"REJECT".equals(productAIReviewVO.getSuggestion())){
+        if (!"PASS".equals(productAIReviewVO.getSuggestion())){
             throw new BusinessException("AI审核异常，请稍后再试");
         }
 

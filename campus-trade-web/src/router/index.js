@@ -16,6 +16,7 @@ import RegisterView from "../views/RegisterView.vue";
 import OrderListView from "../views/OrderListView.vue";
 import FavoriteListView from '../views/FavoriteListView.vue'
 import OrderDetailView from '../views/OrderDetailView.vue'
+import AdminAIReviewLogView from "../views/AdminAIReviewLogView.vue";
 
 const router = createRouter({
     history:createWebHistory(),
@@ -51,6 +52,10 @@ const router = createRouter({
         {
             path: '/admin/users',
             component: AdminUserListView
+        },
+        {
+            path:'/admin/aireviewlogs',
+            component: AdminAIReviewLogView
         },
         {
             path: '/admin/orders',

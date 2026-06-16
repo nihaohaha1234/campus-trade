@@ -105,4 +105,20 @@ CREATE TABLE `user` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
+--
+-- Table structure for table `ai_review_log`
+--
+
+CREATE TABLE IF NOT EXISTS `ai_review_log` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '日志id',
+  `user_id` bigint NOT NULL COMMENT '用户id',
+  `product_title` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '商品标题',
+  `product_description` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '商品描述',
+  `product_price` decimal(10,2) NOT NULL COMMENT '商品价格',
+  `suggestion` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'AI建议：PASS通过，REJECT拒绝',
+  `reason` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '审核原因',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI审核日志表';
+
 -- Dump completed on 2026-06-11 15:20:39

@@ -36,6 +36,12 @@
         <p>查看订单状态，跟踪交易流程。</p>
         <span>进入管理</span>
       </div>
+
+      <div class="admin-card" @click="goAdminAIReviewLogs">
+        <h2>AI审核日志管理</h2>
+        <p>查看AI审核日志，管理审核流程。</p>
+        <span>进入管理</span>
+      </div>
     </div>
   </div>
 </template>
@@ -63,6 +69,10 @@ function goAdminUser(){
 
 function goAdminOrder(){
   router.push('/admin/orders')
+}
+
+function goAdminAIReviewLogs(){
+  router.push('/admin/aireviewlogs')
 }
 </script>
 

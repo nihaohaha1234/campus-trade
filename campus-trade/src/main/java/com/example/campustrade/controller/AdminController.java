@@ -2,11 +2,7 @@ package com.example.campustrade.controller;
 
 import com.example.campustrade.common.Result;
 import com.example.campustrade.service.AdminService;
-import com.example.campustrade.vo.OrderVO;
-import com.example.campustrade.vo.PageVO;
-import com.example.campustrade.vo.ProductVO;
-import com.example.campustrade.vo.UserVO;
-import org.springframework.data.domain.Page;
+import com.example.campustrade.vo.*;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -39,6 +35,12 @@ public class AdminController {
     public Result<PageVO<ProductVO>> getAllProducts(@RequestParam(defaultValue = "1") Long page,
                                                     @RequestParam(defaultValue = "20") Long pageSize){
         return Result.success(adminService.getAllProductsForAdmin(page,pageSize));
+    }
+
+    @GetMapping("/ai-review-logs")
+    public Result<PageVO<AIReviewLogVO>> getAIReviewLogs(@RequestParam(defaultValue = "1") Long page,
+                                                         @RequestParam(defaultValue = "10") Long pageSize){
+        return Result.success(adminService.getAIReviewLogs(page,pageSize));
     }
 
     @GetMapping("/products/pending")

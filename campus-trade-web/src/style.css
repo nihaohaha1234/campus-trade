@@ -1127,3 +1127,151 @@ button {
   cursor: not-allowed;
   box-shadow: none;
 }
+
+
+ .admin-log-page {
+   min-height: 100vh;
+   padding: 64px 8%;
+   background: #f3f6fb;
+   color: #111827;
+ }
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 36px;
+  font-weight: 800;
+}
+
+.page-header p {
+  margin: 10px 0 0;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+.back-btn {
+  border: none;
+  background: #64748b;
+  color: white;
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  background: #475569;
+}
+
+.error {
+  color: #dc2626;
+  margin-bottom: 16px;
+}
+
+.table-card {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1050px;
+}
+
+th {
+  text-align: left;
+  padding: 14px 12px;
+  color: #374151;
+  font-size: 14px;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #eef2f7;
+  color: #111827;
+  font-size: 14px;
+  vertical-align: top;
+}
+
+tr:hover {
+  background: #f9fafb;
+}
+
+.title-cell {
+  font-weight: 700;
+  max-width: 160px;
+}
+
+.desc-cell,
+.reason-cell {
+  max-width: 260px;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.pass-tag,
+.reject-tag {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pass-tag {
+  color: #047857;
+  background: #d1fae5;
+}
+
+.reject-tag {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.empty {
+  padding: 40px 0;
+  text-align: center;
+  color: #6b7280;
+}
+
+.pagination {
+  margin-top: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+}
+
+.page-btn {
+  border: none;
+  background: #1d72f3;
+  color: white;
+  padding: 11px 22px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.page-btn:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.page-info,
+.total-info {
+  color: #334155;
+  font-size: 14px;
+}

@@ -1,7 +1,9 @@
 package com.example.campustrade.service.impl;
 
 import com.example.campustrade.common.BusinessException;
+import com.example.campustrade.component.AdminChecker;
 import com.example.campustrade.dto.ProductAIDTO;
+import com.example.campustrade.mapper.AIReviewLogMapper;
 import com.example.campustrade.service.AIService;
 import com.example.campustrade.vo.ProductAIOptimizeVO;
 import com.example.campustrade.vo.ProductAIReviewVO;
@@ -29,8 +31,14 @@ public class AIServiceImpl implements AIService {
 
     private final ObjectMapper objectMapper;
 
-    public AIServiceImpl(ObjectMapper objectMapper) {
+    private final AIReviewLogMapper aiReviewLogMapper;
+
+    private final AdminChecker adminChecker;
+
+    public AIServiceImpl(ObjectMapper objectMapper, AIReviewLogMapper aiReviewLogMapper, AdminChecker adminChecker) {
         this.objectMapper = objectMapper;
+        this.aiReviewLogMapper = aiReviewLogMapper;
+        this.adminChecker = adminChecker;
     }
 
     @Override
@@ -135,4 +143,6 @@ public class AIServiceImpl implements AIService {
         }
         return vo;
     }
+
+
 }

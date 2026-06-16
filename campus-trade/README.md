@@ -1,16 +1,8 @@
-# 校园二手交易平台
+# 校园二手交易平台后端
 
-## 项目介绍
-
-校园二手交易平台是一个前后端分离的校园闲置物品交易系统，面向校内用户的二手商品发布、审核、浏览、收藏、下单和交易管理场景。
-
-项目支持普通用户和管理员两类角色。普通用户可以注册登录、发布商品、浏览商品、收藏商品、发起交易、管理自己的商品和订单；管理员可以审核商品、管理用户、查看全平台商品和订单。
-
-本项目重点练习 Spring Boot 后端开发、MyBatis-Plus 数据访问、JWT 登录认证、Redis 缓存与热门排行、前后端分离接口设计，以及 Vue 基础页面开发。
+这是校园二手交易平台的后端项目，基于 Spring Boot 开发，提供用户认证、商品、收藏、订单、管理员后台、文件上传、Redis 缓存、AI 文案优化和 AI 审核日志等接口。
 
 ## 技术栈
-
-### 后端
 
 - Java 17
 - Spring Boot
@@ -20,47 +12,63 @@
 - Redis
 - JWT
 - BCrypt
+- DeepSeek API
 - Maven
 
-### 前端
+## 模块结构
 
-- Vue 3
-- Vue Router
-- Axios
-- Vite
-- HTML / CSS / JavaScript
+```text
+src/main/java/com/example/campustrade
+├── common        通用返回、异常、上下文、Redis Key、分页校验
+├── component     业务组件，例如管理员权限校验
+├── config        MyBatis-Plus、密码加密、跨域、静态资源配置
+├── controller    接口层
+├── convert       DO/DTO/VO 转换
+├── dto           前端请求参数对象
+├── entity        数据库实体对象
+├── enums         状态枚举
+├── interceptor   登录拦截器
+├── mapper        MyBatis-Plus Mapper
+├── service       业务接口
+├── service/impl  业务实现
+├── utils         JWT、订单号等工具类
+└── vo            后端返回给前端的数据对象
+```
 
-## 功能模块
+## 核心功能
 
-### 用户模块
+### 用户与认证
 
 - 用户注册、登录
-- JWT 登录认证
 - BCrypt 密码加密
-- Redis 登录失败次数限制
-- 用户禁用后禁止继续访问受保护接口
+- JWT Token 签发和解析
+- 登录拦截器保护需要登录的接口
+- 用户禁用后，旧 Token 也不能继续访问受保护接口
+- Redis 记录登录失败次数，短时间失败过多时限制登录
 
-### 商品模块
+### 商品
 
 - 发布商品
-- 上传商品图片
 - 修改商品
 - 下架商品
-- 查看公开商品列表
-- 查看商品详情
+- 查询公开商品列表
+- 查询商品详情
 - 商品关键词搜索
-- 我的发布按状态筛选
-- Redis 商品详情缓存
-- Redis ZSet 热门商品榜
+- 我的商品列表和状态筛选
+- 商品图片上传
+- 商品详情 Redis 缓存
+- 热门商品榜
+- 基于浏览记录的个性化推荐
 
-### 收藏模块
+### 收藏
 
 - 收藏商品
 - 取消收藏
-- 我的收藏列表
-- 商品详情页显示收藏状态
+- 查询我的收藏
+- 判断商品是否已收藏
+- 数据库使用用户 ID + 商品 ID 联合唯一索引，避免重复收藏
 
-### 订单模块
+### 订单
 
 - 发起交易
 - 买家订单列表
@@ -69,80 +77,36 @@
 - 卖家确认订单
 - 买家或卖家完成订单
 - 买家或卖家取消订单
-- 订单按状态筛选
+- 管理员查看全平台订单
+- 订单创建、取消、完成会同步修改商品状态，并使用事务保证一致性
 
-### 管理员模块
+### 管理员
 
-- 管理员控制台
-- 商品审核通过
-- 商品审核拒绝
+- 查看用户列表
+- 禁用和启用普通用户
 - 查看全部商品
+- 搜索全部商品
 - 查看待审核商品
-- 用户禁用和启用
+- 审核通过商品
+- 审核拒绝商品
 - 查看全平台订单
-- 管理员订单按状态筛选
+- 查看 AI 审核日志
 
-## 核心业务流程
+### AI 能力
 
-1. 用户注册并登录系统。
-2. 用户发布商品并上传商品图片。
-3. 商品进入待审核状态。
-4. 管理员审核商品，通过后商品进入公开列表。
-5. 其他用户浏览商品，可以收藏商品或发起交易。
-6. 发起交易后商品进入锁定状态，避免重复交易。
-7. 卖家确认订单后，订单进入已确认状态。
-8. 买家或卖家确认完成后，订单完成，商品变为已售出。
-9. 管理员可以查看用户、商品和订单数据。
+- 商品标题和描述智能优化
+- 商品发布前 AI 审核
+- AI 审核结果落库
+- 管理员查看 AI 审核建议、审核原因和创建时间
 
-## 项目亮点
+## Redis 使用场景
 
-- 使用 JWT + 拦截器实现登录认证，对商品发布、收藏、订单、后台管理等接口进行保护。
-- 使用 BCrypt 对密码进行加密存储，避免明文密码风险。
-- 使用统一返回对象 `Result<T>` 和全局异常处理，保证接口返回结构一致。
-- 使用 MyBatis-Plus 实现分页查询、条件查询和基础 CRUD。
-- 使用枚举管理商品状态、订单状态、用户角色和用户状态，减少魔法数字。
-- 使用 Redis 记录登录失败次数，对短时间多次登录失败的账号进行临时限制。
-- 使用 Redis 缓存商品详情，降低热门商品详情接口对 MySQL 的重复查询。
-- 使用 Redis ZSet 统计商品访问热度，实现热门商品榜。
-- 使用 MultipartFile 实现图片上传，并通过静态资源映射返回可访问的图片地址。
-- 在创建订单、取消订单、完成订单等涉及多表修改的业务中使用事务，保证数据一致性。
-- 前端使用 Axios 拦截器统一携带 Token，并在登录状态失效时自动跳转登录页。
-- 前端使用 Toast 组件替代部分浏览器 `alert`，优化操作反馈体验。
-
-## 状态说明
-
-### 商品状态
-
-| 状态值 | 含义 |
-|---|---|
-| 0 | 待审核 |
-| 1 | 已上架 |
-| 2 | 已下架 / 审核拒绝 |
-| 3 | 已售出 |
-| 4 | 已锁定 |
-
-### 订单状态
-
-| 状态值 | 含义 |
-|---|---|
-| 0 | 待确认 |
-| 1 | 已确认 |
-| 2 | 已完成 |
-| 3 | 已取消 |
-
-### 用户角色
-
-| 状态值 | 含义 |
-|---|---|
-| 0 | 普通用户 |
-| 1 | 管理员 |
-
-### 用户状态
-
-| 状态值 | 含义 |
-|---|---|
-| 0 | 禁用 |
-| 1 | 正常 |
+| 场景 | 数据结构 | 说明 |
+|---|---|---|
+| 登录失败限制 | String | 记录用户名失败次数，设置过期时间 |
+| 商品详情缓存 | String | 缓存商品详情 JSON，减少 MySQL 查询 |
+| 热门商品榜 | ZSet | 记录商品访问热度分数 |
+| 用户浏览记录 | List | 记录用户最近浏览的商品 ID，用于推荐 |
 
 ## 主要接口
 
@@ -158,11 +122,12 @@
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | POST | `/products` | 发布商品 |
-| GET | `/products` | 查询上架商品 |
+| GET | `/products` | 查询已上架商品 |
+| GET | `/products/recommend` | 查询个性化推荐商品 |
 | GET | `/products/search` | 搜索商品 |
 | GET | `/products/hot` | 热门商品榜 |
 | GET | `/products/{id}` | 商品详情 |
-| GET | `/products/my` | 我的发布 |
+| GET | `/products/my` | 我的商品 |
 | GET | `/products/my/{id}` | 我的商品详情 |
 | PUT | `/products/{productId}` | 修改商品 |
 | PUT | `/products/{productId}/off` | 下架商品 |
@@ -181,8 +146,8 @@
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | POST | `/orders/{productId}` | 创建订单 |
-| GET | `/orders/buyer` | 买家订单列表 |
-| GET | `/orders/seller` | 卖家订单列表 |
+| GET | `/orders/buyer` | 买家订单 |
+| GET | `/orders/seller` | 卖家订单 |
 | GET | `/orders/{orderId}` | 订单详情 |
 | PUT | `/orders/{orderId}/confirm` | 卖家确认订单 |
 | PUT | `/orders/{orderId}/finish` | 完成订单 |
@@ -192,42 +157,31 @@
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/admin/products` | 查看全部商品 |
-| GET | `/admin/products/search` | 管理员搜索商品 |
-| GET | `/admin/products/pending` | 查看待审核商品 |
-| GET | `/admin/products/{productId}` | 管理员查看商品详情 |
-| PUT | `/admin/products/{productId}/approve` | 审核通过 |
-| PUT | `/admin/products/{productId}/reject` | 审核拒绝 |
-| GET | `/admin/users` | 查看用户列表 |
+| GET | `/admin/users` | 用户列表 |
 | PUT | `/admin/users/{userId}/disable` | 禁用用户 |
 | PUT | `/admin/users/{userId}/enable` | 启用用户 |
-| GET | `/admin/orders` | 管理员查看订单列表 |
+| GET | `/admin/products` | 全部商品 |
+| GET | `/admin/products/search` | 管理员搜索商品 |
+| GET | `/admin/products/pending` | 待审核商品 |
+| GET | `/admin/products/{productId}` | 管理员商品详情 |
+| PUT | `/admin/products/{productId}/approve` | 审核通过 |
+| PUT | `/admin/products/{productId}/reject` | 审核拒绝 |
+| GET | `/admin/orders` | 全平台订单 |
+| GET | `/admin/ai-review-logs` | AI 审核日志 |
+
+### AI 接口
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/ai/products/optimize` | AI 优化商品标题和描述 |
 
 ### 文件接口
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| POST | `/files/upload` | 上传图片 |
+| POST | `/files/upload` | 上传商品图片 |
 
-## 前端页面
-
-- 登录页
-- 注册页
-- 商品列表页
-- 商品详情页
-- 发布商品页
-- 修改商品页
-- 我的商品页
-- 收藏列表页
-- 我的订单页
-- 订单详情页
-- 管理员首页
-- 管理员商品列表页
-- 管理员商品审核页
-- 管理员用户管理页
-- 管理员订单管理页
-
-## 启动方式
+## 本地启动
 
 ### 1. 准备环境
 
@@ -235,32 +189,46 @@
 - Maven
 - MySQL
 - Redis
-- Node.js
 
 ### 2. 初始化数据库
-
-创建数据库：
 
 ```sql
 CREATE DATABASE campus_trade DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-然后创建项目所需表，包括用户表、商品表、收藏表和订单表。
+导入项目根目录下的 SQL：
 
-### 3. 修改后端配置
-
-修改后端 `src/main/resources/application.properties` 中的数据库账号和密码：
-
-```properties
-spring.datasource.username=root
-spring.datasource.password=你的密码
+```bash
+mysql -u root -p campus_trade < ../campus_trade_schema.sql
+mysql -u root -p campus_trade < ../campus_trade_data.sql
 ```
 
-确认 Redis 配置：
+### 3. 配置后端
+
+复制配置文件：
+
+```text
+src/main/resources/application-example.properties
+```
+
+复制为：
+
+```text
+src/main/resources/application.properties
+```
+
+配置 MySQL、Redis 和 DeepSeek：
 
 ```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/campus_trade?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+spring.datasource.username=root
+spring.datasource.password=你的密码
+
 spring.data.redis.host=localhost
 spring.data.redis.port=6379
+
+deepseek.base-url=https://api.deepseek.com/chat/completions
+deepseek.api-key=你的 DeepSeek API Key
 ```
 
 ### 4. 启动 Redis
@@ -271,56 +239,38 @@ redis-server
 
 ### 5. 启动后端
 
-在后端项目目录执行：
-
 ```bash
 mvn spring-boot:run
 ```
 
-后端默认运行在：
+默认访问地址：
 
 ```text
 http://localhost:8080
 ```
 
-### 6. 启动前端
+## 部署说明
 
-在前端项目目录执行：
-
-```bash
-npm install
-npm run dev
-```
-
-前端默认运行在：
+Railway 部署时需要配置以下环境变量：
 
 ```text
-http://localhost:5173
+SPRING_DATASOURCE_URL
+SPRING_DATASOURCE_USERNAME
+SPRING_DATASOURCE_PASSWORD
+SPRING_DATASOURCE_DRIVER_CLASS_NAME
+
+SPRING_DATA_REDIS_HOST
+SPRING_DATA_REDIS_PORT
+SPRING_DATA_REDIS_PASSWORD
+
+DEEPSEEK_BASE_URL
+DEEPSEEK_API_KEY
 ```
 
-## 图片上传说明
+图片上传在线上环境保存到：
 
-商品图片上传流程：
+```text
+/tmp/campus-trade/images/
+```
 
-1. 前端调用 `/files/upload` 上传图片文件。
-2. 后端使用 UUID 重命名文件并保存到本地目录。
-3. 后端返回 `/images/xxx.jpg` 格式的图片访问路径。
-4. 发布或修改商品时，将该地址作为 `imageUrl` 传入。
-5. 查询商品时返回 `imageUrl`，前端通过 `http://localhost:8080/images/xxx.jpg` 展示图片。
-
-## Redis 使用说明
-
-本项目 Redis 主要用于以下场景：
-
-- 登录失败次数限制：记录用户短时间内登录失败次数，超过阈值后临时限制登录。
-- 商品详情缓存：缓存公开商品详情，减少重复查询 MySQL。
-- 热门商品排行：使用 Redis ZSet 记录商品访问热度，返回热门商品列表。
-
-## 后续优化
-
-- 整理 Apifox 接口文档。
-- 增加项目页面截图。
-- 抽取分页组件、商品卡片组件和通用状态显示方法。
-- 使用更完善的全局消息提示机制。
-- 支持商品多图和用户头像。
-- 学习并尝试部署到云服务器。
+该目录适合演示使用。如果要长期保存图片，建议后续接入对象存储。

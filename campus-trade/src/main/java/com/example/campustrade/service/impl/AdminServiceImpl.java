@@ -6,24 +6,20 @@ import com.example.campustrade.common.BusinessException;
 import com.example.campustrade.common.PageParamChecker;
 import com.example.campustrade.common.RedisKeys;
 import com.example.campustrade.component.AdminChecker;
-import com.example.campustrade.convert.OrderConvert;
-import com.example.campustrade.convert.PageConvert;
-import com.example.campustrade.convert.ProductConvert;
-import com.example.campustrade.convert.UserConvert;
+import com.example.campustrade.convert.*;
+import com.example.campustrade.entity.AIReviewLogDO;
 import com.example.campustrade.entity.OrderDO;
 import com.example.campustrade.entity.ProductDO;
 import com.example.campustrade.entity.UserDO;
 import com.example.campustrade.enums.ProductStatus;
 import com.example.campustrade.enums.UserRole;
 import com.example.campustrade.enums.UserStatus;
+import com.example.campustrade.mapper.AIReviewLogMapper;
 import com.example.campustrade.mapper.OrderMapper;
 import com.example.campustrade.mapper.ProductMapper;
 import com.example.campustrade.mapper.UserMapper;
 import com.example.campustrade.service.AdminService;
-import com.example.campustrade.vo.OrderVO;
-import com.example.campustrade.vo.PageVO;
-import com.example.campustrade.vo.ProductVO;
-import com.example.campustrade.vo.UserVO;
+import com.example.campustrade.vo.*;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -38,15 +34,18 @@ public class AdminServiceImpl implements AdminService {
 
     private final UserMapper userMapper;
 
+    private final AIReviewLogMapper aiReviewLogMapper;
+
     private final OrderMapper orderMapper;
 
     private final AdminChecker adminChecker;
 
     private final StringRedisTemplate stringRedisTemplate;
 
-    public AdminServiceImpl(ProductMapper productMapper, UserMapper userMapper, OrderMapper orderMapper, AdminChecker adminChecker, StringRedisTemplate stringRedisTemplate) {
+    public AdminServiceImpl(ProductMapper productMapper, UserMapper userMapper, AIReviewLogMapper aiReviewLogMapper, OrderMapper orderMapper, AdminChecker adminChecker, StringRedisTemplate stringRedisTemplate) {
         this.productMapper = productMapper;
         this.userMapper = userMapper;
+        this.aiReviewLogMapper = aiReviewLogMapper;
         this.orderMapper = orderMapper;
         this.adminChecker = adminChecker;
         this.stringRedisTemplate = stringRedisTemplate;
@@ -184,6 +183,24 @@ public class AdminServiceImpl implements AdminService {
             orderVOList.add(OrderConvert.convertToVo(orderDO,productDO));
         });
         return PageConvert.convert(pageParam,orderVOList);
+    }
+
+    @Override
+    public PageVO<AIReviewLogVO> getAIReviewLogs(Long page, Long pageSize) {
+        adminChecker.checkAdmin();
+        PageParamChecker.check(page,pageSize);
+
+        Page<AIReviewLogDO> pageParam = new Page<>(page,pageSize);
+        LambdaQueryWrapper<AIReviewLogDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByDesc(AIReviewLogDO::getCreateTime);
+        Page<AIReviewLogDO> aiReviewLogDOPage = aiReviewLogMapper.selectPage(pageParam,wrapper);
+        
+        List<AIReviewLogVO> aiReviewLogVOList = new ArrayList<>();
+        aiReviewLogDOPage.getRecords().forEach(aiReviewLogDO -> {
+            aiReviewLogVOList.add(AIReviewLogConvert.convertToVO(aiReviewLogDO));
+        });
+
+        return PageConvert.convert(pageParam,aiReviewLogVOList);
     }
 
     @Override

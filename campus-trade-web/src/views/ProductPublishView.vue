@@ -73,7 +73,7 @@ async function publishProduct(){
   }
   submitting.value=true
   try {
-    const res = await request.post('/products',form)
+    const res = await request.post('/products',form,{timeout:20000})
     if (res.data.code === 200){
       showMessage('发布成功，请等待管理员审核',"success")
       setTimeout(()=>{

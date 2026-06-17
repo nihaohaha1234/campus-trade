@@ -1,39 +1,45 @@
-package com.example.campustrade.utils;
+package com.example.campustrade.component;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
+@Component
 public class JwtUtils {
+    @Value("${jwt.secret}")
+    private String secret;
 
-    private static final String SECRET = "campus-trade-secret-key-campus-trade-secret-key";
+    @Value("${jwt.expire-time}")
+    private Long expireTime;
 
-    private static final long EXPIRE_TIME = 1000*60*60*24;
-
-    private static final SecretKey KEY = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
+    private SecretKey getKey(){
+       return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
 
     //用userId生成token
-    public static String generateToken(Long userId){
+    public String generateToken(Long userId){
 
         Date now = new Date();
-        Date expireDate = new Date(now.getTime() + EXPIRE_TIME );
+        Date expireDate = new Date(now.getTime() + expireTime );
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))//存用户id
                 .issuedAt(now)                  //现在时间
                 .expiration(expireDate)         //过期时间
-                .signWith(KEY)                  //签名密钥
+                .signWith(getKey())                  //签名密钥
                 .compact();
     }
 
     //解析token 取出userId
-    public static Long getUserIdFromToken(String token){
+    public Long getUserIdFromToken(String token){
         Claims claims = Jwts.parser()
-                .verifyWith(KEY)
+                .verifyWith(getKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

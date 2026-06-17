@@ -23,9 +23,11 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -52,30 +54,28 @@ public class ProductServiceImpl implements ProductService {
     public void productPublish(ProductDTO productDTO) {
 
         Long userId = AuthContext.getCurrentUserId();
+        ProductDO productDO = ProductConvert.convertToDO(productDTO,userId);
 
         ProductAIDTO productAIDTO = new ProductAIDTO();
         productAIDTO.setTitle(productDTO.getTitle());
         productAIDTO.setDescription(productDTO.getDescription());
         productAIDTO.setPrice(productDTO.getPrice());
 
-        ProductAIReviewVO productAIReviewVO = aiService.reviewProduct(productAIDTO);
-
-        if (productAIReviewVO == null || productAIReviewVO.getSuggestion() == null) {
-            throw new BusinessException("AI审核失败，请稍后再试");
+        ProductAIReviewVO productAIReviewVO;
+        try {
+            productAIReviewVO = aiService.reviewProduct(productAIDTO);
+        }catch (Exception e){
+            productAIReviewVO = new ProductAIReviewVO("PASS","AI审核不可用，降级为人工审核");
         }
 
         AIReviewLogDO aiReviewLogDO = AIReviewLogConvert.convertToDO(productAIDTO,userId,productAIReviewVO);
         aiReviewLogMapper.insert(aiReviewLogDO);
 
         if ("REJECT".equals(productAIReviewVO.getSuggestion())){
+            productDO.setStatus(ProductStatus.OFF_SHELF.getCode());
+            productMapper.insert(productDO);
             throw new BusinessException("AI审核未通过:"+productAIReviewVO.getReason());
         }
-
-        if (!"PASS".equals(productAIReviewVO.getSuggestion())){
-            throw new BusinessException("AI审核异常，请稍后再试");
-        }
-
-        ProductDO productDO = ProductConvert.convertToDO(productDTO,userId);
 
         productDO.setStatus(ProductStatus.PENDING_REVIEW.getCode());//发布商品时设置商品状态为待审核
 
@@ -219,7 +219,9 @@ public class ProductServiceImpl implements ProductService {
         if(productJson != null){
             try {
                 ProductVO productVO = objectMapper.readValue(productJson,ProductVO.class);
-                stringRedisTemplate.opsForZSet().incrementScore(RedisKeys.PRODUCT_HOT_KEY, String.valueOf(id),1);
+                String key = RedisKeys.PRODUCT_HOT_KEY + LocalDate.now();
+                stringRedisTemplate.opsForZSet().incrementScore(key , String.valueOf(id),1);
+                stringRedisTemplate.expire(key,2, TimeUnit.DAYS);
                 return productVO;
             } catch (Exception e) {
                 stringRedisTemplate.delete(productKey);
@@ -243,8 +245,9 @@ public class ProductServiceImpl implements ProductService {
             stringRedisTemplate.opsForValue().set(productKey,json, Duration.ofMinutes(30));
         } catch (Exception e) {
         }
-
-        stringRedisTemplate.opsForZSet().incrementScore(RedisKeys.PRODUCT_HOT_KEY, String.valueOf(id),1);
+        String key = RedisKeys.PRODUCT_HOT_KEY + LocalDate.now();
+        stringRedisTemplate.opsForZSet().incrementScore(key , String.valueOf(id),1);
+        stringRedisTemplate.expire(key,2,TimeUnit.DAYS);
         return productVO;
     }
 
@@ -316,7 +319,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductVO> getHotProducts() {
-        Set<String> productIds = stringRedisTemplate.opsForZSet().reverseRange(RedisKeys.PRODUCT_HOT_KEY,0,9);
+        Set<String> productIds = stringRedisTemplate.opsForZSet().reverseRange(RedisKeys.PRODUCT_HOT_KEY+LocalDate.now(),0,9);
         List<ProductVO> productVOList = new ArrayList<>();
         if(productIds == null || productIds.isEmpty()){
             return productVOList;

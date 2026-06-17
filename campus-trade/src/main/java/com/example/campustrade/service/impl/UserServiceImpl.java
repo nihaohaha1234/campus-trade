@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.campustrade.common.RedisKeys;
 import com.example.campustrade.convert.UserConvert;
 import com.example.campustrade.enums.UserStatus;
-import com.example.campustrade.utils.JwtUtils;
+import com.example.campustrade.component.JwtUtils;
 import com.example.campustrade.vo.LoginVO;
 import com.example.campustrade.vo.UserVO;
 import com.example.campustrade.common.BusinessException;
@@ -28,10 +28,13 @@ public class UserServiceImpl implements UserService {
 
     private final StringRedisTemplate stringRedisTemplate;
 
-    public UserServiceImpl(UserMapper userMapper, PasswordEncoder passwordEncoder, StringRedisTemplate stringRedisTemplate) {
+    private final JwtUtils jwtUtils;
+
+    public UserServiceImpl(UserMapper userMapper, PasswordEncoder passwordEncoder, StringRedisTemplate stringRedisTemplate, JwtUtils jwtUtils) {
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.stringRedisTemplate = stringRedisTemplate;
+        this.jwtUtils = jwtUtils;
     }
 
     //注册用户
@@ -81,7 +84,7 @@ public class UserServiceImpl implements UserService {
 
         LoginVO loginVO = new LoginVO();
         loginVO.setUser(userVO);
-        loginVO.setToken(JwtUtils.generateToken(userDO.getId()));
+        loginVO.setToken(jwtUtils.generateToken(userDO.getId()));
         return loginVO;
     }
 }

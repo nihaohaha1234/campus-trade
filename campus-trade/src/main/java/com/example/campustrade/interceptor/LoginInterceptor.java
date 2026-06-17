@@ -5,7 +5,7 @@ import com.example.campustrade.common.UserContext;
 import com.example.campustrade.entity.UserDO;
 import com.example.campustrade.enums.UserStatus;
 import com.example.campustrade.mapper.UserMapper;
-import com.example.campustrade.utils.JwtUtils;
+import com.example.campustrade.component.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
@@ -17,8 +17,11 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     private final UserMapper userMapper;
 
-    public LoginInterceptor(UserMapper userMapper) {
+    private final JwtUtils jwtUtils;
+
+    public LoginInterceptor(UserMapper userMapper, JwtUtils jwtUtils) {
         this.userMapper = userMapper;
+        this.jwtUtils = jwtUtils;
     }
 
     //在controller运行前拦截判断有没有登录
@@ -38,7 +41,7 @@ public class LoginInterceptor implements HandlerInterceptor {
             if (authorization != null && authorization.startsWith("Bearer ")){
                 String token = authorization.substring(7);
                 try {
-                    Long userId = JwtUtils.getUserIdFromToken(token);
+                    Long userId = jwtUtils.getUserIdFromToken(token);
                     UserContext.setUserId(userId);
                     UserDO userDO = userMapper.selectById(userId);
                     if (userDO == null){
@@ -60,7 +63,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         String token = authorization.substring(7);
         Long userId = null;
         try {
-            userId = JwtUtils.getUserIdFromToken(token);
+            userId = jwtUtils.getUserIdFromToken(token);
             UserContext.setUserId(userId);
         }catch (Exception e){
             throw new BusinessException("登陆状态无效，请重新登录");

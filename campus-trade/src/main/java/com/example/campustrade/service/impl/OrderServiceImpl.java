@@ -1,6 +1,7 @@
 package com.example.campustrade.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.campustrade.common.AuthContext;
 import com.example.campustrade.common.BusinessException;
@@ -48,11 +49,17 @@ public class OrderServiceImpl implements OrderService {
         if(productDO == null){
             throw new BusinessException("该商品不存在");
         }
-        if(!ProductStatus.ON_SALE.getCode().equals(productDO.getStatus())){
-            throw new BusinessException("该商品未上架");
-        }
         if(userId.equals(productDO.getUserId())){
             throw new BusinessException("不能买自己上架的商品");
+        }
+
+        LambdaUpdateWrapper<ProductDO> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(ProductDO::getStatus,ProductStatus.ON_SALE.getCode())
+                .eq(ProductDO::getId,productId)
+                .set(ProductDO::getStatus,ProductStatus.LOCKED.getCode());
+        int updated = productMapper.update(null,updateWrapper);
+        if(updated == 0){
+            throw new BusinessException("商品已被其他用户下单或当前不可交易");
         }
 
         OrderDO orderDO = new OrderDO();

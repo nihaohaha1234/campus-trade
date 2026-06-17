@@ -8,4 +8,12 @@ public class ProductAIReviewVO {
     private String suggestion;
 
     private String reason;
+
+    public ProductAIReviewVO(){
+    }
+
+    public ProductAIReviewVO(String suggestion,String reason){
+        this.suggestion = suggestion;
+        this.reason = reason;
+    }
 }

@@ -2,6 +2,7 @@ package com.example.campustrade.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.campustrade.common.AuthContext;
 import com.example.campustrade.common.BusinessException;
@@ -53,10 +54,10 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException("不能买自己上架的商品");
         }
 
-        LambdaUpdateWrapper<ProductDO> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(ProductDO::getStatus,ProductStatus.ON_SALE.getCode())
-                .eq(ProductDO::getId,productId)
-                .set(ProductDO::getStatus,ProductStatus.LOCKED.getCode());
+        UpdateWrapper<ProductDO> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("status",ProductStatus.ON_SALE.getCode())
+                .eq("id",productId)
+                .set("status",ProductStatus.LOCKED.getCode());
         int updated = productMapper.update(null,updateWrapper);
         if(updated == 0){
             throw new BusinessException("商品已被其他用户下单或当前不可交易");
@@ -70,8 +71,6 @@ public class OrderServiceImpl implements OrderService {
         orderDO.setPrice(productDO.getPrice());
         orderDO.setSellerId(productDO.getUserId());
 
-        productDO.setStatus(ProductStatus.LOCKED.getCode());//商品状态改为已锁定 避免别人继续购买
-        productMapper.updateById(productDO);
         stringRedisTemplate.delete(RedisKeys.PRODUCT_DETAIL_KEY_PREFIX+productId);
 
         orderMapper.insert(orderDO);
